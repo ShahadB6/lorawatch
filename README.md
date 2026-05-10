@@ -2,8 +2,8 @@
 
 A real-time IoT system that monitors server room temperature, humidity, CO₂, motion, and NFC door access — transmitting AES-128-ECB encrypted sensor data over LoRa radio to a live AI-powered security dashboard.
 
-🌐 **Website:** [lorawatch.site](https://lorawatch.site)  
-📧 **Email:** info@lorawatch.site
+🌐 **Website:** [lorawatch.watch](https://lorawatch.watch)  
+📧 **Email:** info@lorawatch.watch
 
 ---
 
