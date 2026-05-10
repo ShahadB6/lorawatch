@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LoRaWatch — Server Room Monitoring System</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- ── NAV ── -->
+  <nav id="navbar">
+    <div class="nav-inner">
+      <a class="logo" href="#hero">
+        <i class="fa-solid fa-tower-broadcast"></i> LoRaWatch
+      </a>
+      <ul class="nav-links">
+        <li><a href="#about">About</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#architecture">Architecture</a></li>
+        <li><a href="#hardware">Hardware</a></li>
+        <li><a href="#ai">AI Engine</a></li>
+        <li><a href="#github">GitHub</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+      <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ── HERO ── -->
+  <section id="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-content">
+      <div class="badge"><i class="fa-solid fa-shield-halved"></i> Senior Project 2026</div>
+      <h1>LoRa<span class="accent">Watch</span></h1>
+      <p class="hero-sub">Server Room Security &amp; Environmental Monitoring System</p>
+      <p class="hero-desc">
+        A real-time IoT solution that monitors server room temperature, humidity, CO₂,
+        motion, and door access — transmitting encrypted sensor data over LoRa radio
+        to a live AI-powered security dashboard.
+      </p>
+      <div class="hero-btns">
+        <a href="#github" class="btn-primary"><i class="fa-brands fa-github"></i> View on GitHub</a>
+        <a href="#about" class="btn-outline">Learn More <i class="fa-solid fa-arrow-down"></i></a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><span>95%+</span><small>Packet Delivery Rate</small></div>
+        <div class="stat"><span>&lt;3s</span><small>End-to-End Latency</small></div>
+        <div class="stat"><span>&lt;1ms</span><small>Encryption Overhead</small></div>
+        <div class="stat"><span>0–100</span><small>AI Risk Score</small></div>
+      </div>
+    </div>
+    <div class="scroll-hint"><i class="fa-solid fa-chevron-down"></i></div>
+  </section>
+
+  <!-- ── ABOUT ── -->
+  <section id="about">
+    <div class="container">
+      <div class="section-label">Overview</div>
+      <h2>What is LoRaWatch?</h2>
+      <div class="about-grid">
+        <div class="about-text">
+          <p>
+            Server rooms are the backbone of modern IT infrastructure, yet they remain
+            vulnerable to environmental risks — overheating, humidity, toxic gas buildup —
+            and physical security threats such as unauthorized access.
+          </p>
+          <p>
+            <strong>LoRaWatch</strong> is a wireless sensor network built around the
+            <strong>ESP32-S3 microcontroller</strong> that continuously monitors six
+            environmental and access parameters. All sensor readings are packed into a
+            compact 16-byte payload, encrypted with <strong>AES-128-ECB</strong>, and
+            transmitted wirelessly over <strong>LoRa radio</strong> to a base station.
+          </p>
+          <p>
+            A Python <strong>Flask</strong> server receives, decrypts, and stores every
+            reading in a local database, then pushes live updates to an authenticated
+            web dashboard via <strong>WebSocket</strong>. An on-board
+            <strong>AI risk engine</strong> scores each reading from 0 to 100 and
+            categorises the environment as Low, Medium, High, or Critical risk in
+            real time.
+          </p>
+        </div>
+        <div class="about-cards">
+          <div class="mini-card">
+            <i class="fa-solid fa-thermometer-half"></i>
+            <h4>Environmental</h4>
+            <p>Temperature, humidity, and CO₂ monitored continuously</p>
+          </div>
+          <div class="mini-card">
+            <i class="fa-solid fa-lock"></i>
+            <h4>Physical Security</h4>
+            <p>NFC access control, motion detection, and door state tracking</p>
+          </div>
+          <div class="mini-card">
+            <i class="fa-solid fa-wifi"></i>
+            <h4>Wireless LoRa</h4>
+            <p>Long-range encrypted transmission through walls and interference</p>
+          </div>
+          <div class="mini-card">
+            <i class="fa-solid fa-brain"></i>
+            <h4>AI Risk Scoring</h4>
+            <p>Weighted multi-factor risk engine updated every sensor cycle</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FEATURES ── -->
+  <section id="features">
+    <div class="container">
+      <div class="section-label">Capabilities</div>
+      <h2>Key Features</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="ficon"><i class="fa-solid fa-temperature-arrow-up"></i></div>
+          <h3>Dual Temperature Monitoring</h3>
+          <p>Two DHT11 sensors independently track server equipment temperature and ambient room temperature, triggering alerts when either crosses safe thresholds.</p>
+        </div>
+        <div class="feature-card">
+          <div class="ficon"><i class="fa-solid fa-droplet"></i></div>
+          <h3>Humidity &amp; CO₂ Sensing</h3>
+          <p>Continuous monitoring of room humidity (alert above 70%) and CO₂ concentration (alert above 1000 ppm) to prevent condensation and air quality hazards.</p>
+        </div>
+        <div class="feature-card">
+          <div class="ficon"><i class="fa-solid fa-id-card"></i></div>
+          <h3>NFC Access Control</h3>
+          <p>PN532 NFC reader authenticates ISO 14443-A cards and tags. Each scan is logged with timestamp, person name, and access result — granted or denied.</p>
+        </div>
+        <div class="feature-card">
+          <div class="ficon"><i class="fa-solid fa-person-walking"></i></div>
+          <h3>Motion Detection</h3>
+          <p>PIR sensor detects human presence. Motion events without valid NFC authorization trigger immediate security alerts on the dashboard.</p>
+        </div>
+        <div class="feature-card">
+          <div class="ficon"><i class="fa-solid fa-door-open"></i></div>
+          <h3>Door State Monitoring</h3>
+          <p>Magnetic reed switch continuously monitors whether the server room door is open or closed, logging every state change with a timestamp.</p>
+        </div>
+        <div class="feature-card">
+          <div class="ficon"><i class="fa-solid fa-key"></i></div>
+          <h3>AES-128 Encryption</h3>
+          <p>Every payload is encrypted with AES-128-ECB using a pre-shared key hardcoded at firmware build time. Encryption takes under 1 millisecond on the ESP32.</p>
+        </div>
+        <div class="feature-card">
+          <div class="ficon"><i class="fa-solid fa-tower-broadcast"></i></div>
+          <h3>LoRa Wireless Link</h3>
+          <p>EBYTE E32-433T20D modules transmit 40-byte frames with CRC-16 Modbus integrity checking, achieving 95%+ packet delivery through walls and interference.</p>
+        </div>
+        <div class="feature-card">
+          <div class="ficon"><i class="fa-solid fa-gauge-high"></i></div>
+          <h3>Live Dashboard</h3>
+          <p>Authenticated Flask web app with persistent WebSocket connection. All panels update within 3 seconds of any event — no page refresh needed.</p>
+        </div>
+        <div class="feature-card">
+          <div class="ficon"><i class="fa-solid fa-bell"></i></div>
+          <h3>Multi-Channel Alerts</h3>
+          <p>Alerts delivered simultaneously via dashboard popup notification, LCD screen on the transmitter node, and a buzzer with distinct alert tones.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ARCHITECTURE ── -->
+  <section id="architecture">
+    <div class="container">
+      <div class="section-label">System Design</div>
+      <h2>Three-Layer Architecture</h2>
+      <div class="arch-wrapper">
+        <div class="arch-layer layer1">
+          <div class="layer-num">Layer 1</div>
+          <h3><i class="fa-solid fa-microchip"></i> Sensor / Perception Layer</h3>
+          <p>The ESP32-S3 transmitter node collects readings from all sensors every 1.5 seconds, formats them into a 16-byte binary payload, encrypts with AES-128-ECB, appends a CRC-16 checksum, and sends a 40-byte frame over UART to the LoRa radio module.</p>
+          <div class="layer-tags">
+            <span>ESP32-S3</span><span>DHT11 × 2</span><span>PIR</span>
+            <span>PN532 NFC</span><span>CO₂ Sensor</span><span>Reed Switch</span>
+          </div>
+        </div>
+        <div class="arch-arrow"><i class="fa-solid fa-arrow-down"></i> LoRa 433 MHz</div>
+        <div class="arch-layer layer2">
+          <div class="layer-num">Layer 2</div>
+          <h3><i class="fa-solid fa-radio"></i> Communication Layer</h3>
+          <p>EBYTE E32-433T20D LoRa modules operate in transparent UART mode. The receiver node parses incoming frames using a three-state UART parser, verifies the CRC-16 checksum, and forwards validated payloads to the server via HTTP POST.</p>
+          <div class="layer-tags">
+            <span>433 MHz LoRa</span><span>CRC-16 Modbus</span>
+            <span>AES-128-ECB</span><span>HTTP POST</span>
+          </div>
+        </div>
+        <div class="arch-arrow"><i class="fa-solid fa-arrow-down"></i> WebSocket / HTTP</div>
+        <div class="arch-layer layer3">
+          <div class="layer-num">Layer 3</div>
+          <h3><i class="fa-solid fa-server"></i> Application / Presentation Layer</h3>
+          <p>The Flask server decrypts the payload, reconstructs all sensor readings, runs the AI risk scoring engine, stores everything in SQLite, and instantly pushes a WebSocket event to all connected dashboard browsers.</p>
+          <div class="layer-tags">
+            <span>Python Flask</span><span>Flask-SocketIO</span><span>SQLite</span>
+            <span>AI Risk Engine</span><span>Eventlet</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── HARDWARE ── -->
+  <section id="hardware">
+    <div class="container">
+      <div class="section-label">Components</div>
+      <h2>Hardware Components</h2>
+      <div class="hw-grid">
+        <div class="hw-card">
+          <div class="hw-icon"><i class="fa-solid fa-microchip"></i></div>
+          <h3>ESP32-S3</h3>
+          <p>Dual-core Xtensa LX7 @ 240 MHz, 512 KB SRAM. Hardware-accelerated AES via mbedTLS. Used as both transmitter and receiver nodes.</p>
+          <div class="hw-spec">GPIO · I2C · UART · mbedTLS</div>
+        </div>
+        <div class="hw-card">
+          <div class="hw-icon"><i class="fa-solid fa-tower-broadcast"></i></div>
+          <h3>EBYTE E32-433T20D</h3>
+          <p>Semtech SX1276 LoRa chip. 433 MHz band, transparent UART mode. Reliable indoor packet delivery through concrete walls.</p>
+          <div class="hw-spec">433 MHz · 20 dBm · SX1276</div>
+        </div>
+        <div class="hw-card">
+          <div class="hw-icon"><i class="fa-solid fa-temperature-half"></i></div>
+          <h3>DHT11 (× 2)</h3>
+          <p>Digital temperature and humidity sensor. ±2°C accuracy, ±5% RH. One monitors server equipment, one monitors ambient room conditions.</p>
+          <div class="hw-spec">±2°C · ±5% RH · 3s interval</div>
+        </div>
+        <div class="hw-card">
+          <div class="hw-icon"><i class="fa-solid fa-id-card"></i></div>
+          <h3>PN532 NFC Reader</h3>
+          <p>Reads ISO 14443-A cards, tags, and stickers. Connected via I2C (SDA=GPIO21, SCL=GPIO0). Passive detection mode, 50 ms scan timeout.</p>
+          <div class="hw-spec">I2C · ISO 14443-A · GPIO21/0</div>
+        </div>
+        <div class="hw-card">
+          <div class="hw-icon"><i class="fa-solid fa-person-rays"></i></div>
+          <h3>PIR Motion Sensor</h3>
+          <p>Detects infrared radiation changes indicating human presence. Software debounce eliminates false triggers from HVAC airflow.</p>
+          <div class="hw-spec">GPIO36 · Digital · Debounced</div>
+        </div>
+        <div class="hw-card">
+          <div class="hw-icon"><i class="fa-solid fa-wind"></i></div>
+          <h3>CO₂ Sensor</h3>
+          <p>Analog output mapped via 12-bit ADC (0–4095 → 400–2000 ppm). Alerts triggered above 1000 ppm. Requires 3–5 min warm-up after power-on.</p>
+          <div class="hw-spec">GPIO35 · 12-bit ADC · 400–2000 ppm</div>
+        </div>
+        <div class="hw-card">
+          <div class="hw-icon"><i class="fa-solid fa-door-closed"></i></div>
+          <h3>Magnetic Reed Switch</h3>
+          <p>LOW when door closed (magnet present), HIGH when door opens. Directly monitored on a digital GPIO — no analog conversion needed.</p>
+          <div class="hw-spec">GPIO39 · Digital · Active-HIGH</div>
+        </div>
+        <div class="hw-card">
+          <div class="hw-icon"><i class="fa-solid fa-display"></i></div>
+          <h3>LCD Screen</h3>
+          <p>Displays live temperature, humidity, CO₂, door state, and NFC scan results directly on the transmitter node for local visibility.</p>
+          <div class="hw-spec">I2C · 16×2 · Real-time</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── AI ENGINE ── -->
+  <section id="ai">
+    <div class="container">
+      <div class="section-label">Intelligence</div>
+      <h2>AI Risk Scoring Engine</h2>
+      <div class="ai-wrapper">
+        <div class="ai-text">
+          <p>
+            Every sensor reading is passed through a weighted multi-factor risk engine
+            that produces a composite score between <strong>0</strong> (fully safe) and
+            <strong>100</strong> (critical threat). The score is updated on every
+            transmission cycle — approximately every 1.5 seconds.
+          </p>
+          <p>
+            The engine uses a trained <strong>MLPClassifier</strong> neural network
+            combined with a deterministic rule-based fallback. The rule-based score
+            always governs the final risk bucket, ensuring predictable and auditable
+            behaviour even in edge cases.
+          </p>
+          <div class="risk-levels">
+            <div class="risk-bar low"><span>Low</span><div class="bar"></div><span>&lt; 25</span></div>
+            <div class="risk-bar medium"><span>Medium</span><div class="bar"></div><span>25–50</span></div>
+            <div class="risk-bar high"><span>High</span><div class="bar"></div><span>50–75</span></div>
+            <div class="risk-bar critical"><span>Critical</span><div class="bar"></div><span>&gt; 75</span></div>
+          </div>
+        </div>
+        <div class="ai-factors">
+          <h4>Scoring Factors &amp; Weights</h4>
+          <table class="factor-table">
+            <thead>
+              <tr><th>Factor</th><th>Weight</th><th>Safe Range</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Server Temperature</td><td>0.25</td><td>20–30°C</td></tr>
+              <tr><td>Door + Motion + NFC</td><td>0.25</td><td>Authorised only</td></tr>
+              <tr><td>Room Temperature</td><td>0.20</td><td>20–30°C</td></tr>
+              <tr><td>Humidity</td><td>0.15</td><td>40–60%</td></tr>
+              <tr><td>CO₂ Level</td><td>0.15</td><td>&lt; 800 ppm</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── GITHUB ── -->
+  <section id="github">
+    <div class="container">
+      <div class="section-label">Open Source</div>
+      <h2>Get the Project</h2>
+      <div class="github-wrapper">
+        <div class="github-card">
+          <i class="fa-brands fa-github github-big-icon"></i>
+          <h3>LoRaWatch on GitHub</h3>
+          <p>The full project source code is publicly available on GitHub — including the ESP32 transmitter firmware, receiver firmware, Flask server, AI model, and dashboard.</p>
+          <a href="https://github.com/ShahadB6/lorawatch" target="_blank" class="btn-primary github-btn">
+            <i class="fa-brands fa-github"></i> github.com/ShahadB6/lorawatch
+          </a>
+          <div class="repo-structure">
+            <h4><i class="fa-solid fa-folder-open"></i> Repository Structure</h4>
+            <pre><code>lorawatch/
+├── esp32_transmitter/
+│   └── esp32_transmitter.ino   # Transmitter firmware
+├── esp32_receiver/
+│   └── esp32_receiver.ino      # Receiver firmware
+└── server/
+    ├── app.py                  # Flask server
+    ├── ai_model.py             # AI risk engine
+    └── templates/
+        ├── dashboard.html      # Live dashboard
+        └── login.html          # Auth page</code></pre>
+          </div>
+        </div>
+        <div class="clone-card">
+          <h4><i class="fa-solid fa-terminal"></i> Quick Start</h4>
+          <div class="code-block">
+            <p class="code-comment"># 1. Clone the repository</p>
+            <code>git clone https://github.com/ShahadB6/lorawatch.git</code>
+          </div>
+          <div class="code-block">
+            <p class="code-comment"># 2. Install Python dependencies</p>
+            <code>pip install flask flask-socketio eventlet scikit-learn</code>
+          </div>
+          <div class="code-block">
+            <p class="code-comment"># 3. Run the server</p>
+            <code>cd lorawatch/server<br/>python app.py</code>
+          </div>
+          <div class="code-block">
+            <p class="code-comment"># 4. Open the dashboard</p>
+            <code>http://localhost:5000</code>
+          </div>
+          <div class="requirements">
+            <h4><i class="fa-solid fa-list-check"></i> Requirements</h4>
+            <ul>
+              <li><i class="fa-solid fa-check"></i> Arduino IDE with ESP32 board support</li>
+              <li><i class="fa-solid fa-check"></i> Python 3.8 or newer</li>
+              <li><i class="fa-solid fa-check"></i> EBYTE E32-433T20D LoRa modules</li>
+              <li><i class="fa-solid fa-check"></i> ESP32-S3 development boards (× 2)</li>
+              <li><i class="fa-solid fa-check"></i> All sensors listed in Hardware section</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CONTACT ── -->
+  <section id="contact">
+    <div class="container">
+      <div class="section-label">Get in Touch</div>
+      <h2>Contact</h2>
+      <div class="contact-wrapper">
+        <div class="contact-info">
+          <p>Have questions about the project, want to collaborate, or need help setting up LoRaWatch? Reach out to us.</p>
+          <div class="contact-items">
+            <div class="contact-item">
+              <i class="fa-solid fa-envelope"></i>
+              <div>
+                <strong>Email</strong>
+                <a href="mailto:info@lorawatch.site">info@lorawatch.site</a>
+              </div>
+            </div>
+            <div class="contact-item">
+              <i class="fa-brands fa-github"></i>
+              <div>
+                <strong>GitHub</strong>
+                <a href="https://github.com/ShahadB6/lorawatch" target="_blank">github.com/ShahadB6/lorawatch</a>
+              </div>
+            </div>
+            <div class="contact-item">
+              <i class="fa-solid fa-globe"></i>
+              <div>
+                <strong>Website</strong>
+                <a href="https://lorawatch.site">lorawatch.site</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="contact-badge">
+          <i class="fa-solid fa-graduation-cap"></i>
+          <h3>Senior Project 2026</h3>
+          <p>Department of Computer Science</p>
+          <p class="contact-year">Academic Year 2025–2026</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ── -->
+  <footer>
+    <div class="container footer-inner">
+      <div class="footer-logo">
+        <i class="fa-solid fa-tower-broadcast"></i> LoRaWatch
+      </div>
+      <p>Server Room Security &amp; Environmental Monitoring System</p>
+      <div class="footer-links">
+        <a href="https://github.com/ShahadB6/lorawatch" target="_blank"><i class="fa-brands fa-github"></i> GitHub</a>
+        <a href="mailto:info@lorawatch.site"><i class="fa-solid fa-envelope"></i> Email</a>
+      </div>
+      <p class="footer-copy">&copy; 2026 LoRaWatch. Senior Project.</p>
+    </div>
+  </footer>
+
+  <script>
+    // Navbar scroll effect
+    window.addEventListener('scroll', () => {
+      document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+    });
+
+    // Hamburger menu
+    document.getElementById('hamburger').addEventListener('click', () => {
+      document.querySelector('.nav-links').classList.toggle('open');
+    });
+
+    // Close menu on link click
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.querySelector('.nav-links').classList.remove('open');
+      });
+    });
+
+    // Smooth reveal on scroll
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('section, .feature-card, .hw-card, .mini-card, .arch-layer').forEach(el => {
+      el.classList.add('fade-in');
+      observer.observe(el);
+    });
+  </script>
+</body>
+</html>

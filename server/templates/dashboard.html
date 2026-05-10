@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Server Room Monitor</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg:      #0d1117;
+      --surface: #161b22;
+      --border:  #30363d;
+      --text:    #c9d1d9;
+      --muted:   #8b949e;
+      --green:   #3fb950;
+      --yellow:  #d29922;
+      --orange:  #f0883e;
+      --red:     #f85149;
+      --blue:    #58a6ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, monospace;
+      margin: 0; padding: 0;
+    }
+
+    /* ── Navbar ── */
+    .navbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .navbar-brand { font-size: 1.1rem; font-weight: 700; color: var(--blue); }
+    .nav-right { display: flex; align-items: center; gap: 16px; }
+    .connection-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--muted); display: inline-block;
+      transition: background 0.3s;
+    }
+    .connection-dot.live { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    /* ── Notification bell ── */
+    .notif-btn {
+      position: relative; cursor: pointer;
+      background: transparent; border: 1px solid var(--border);
+      border-radius: 6px; padding: 4px 10px; font-size: 1rem;
+      color: var(--text); transition: all 0.2s;
+    }
+    .notif-btn:hover { border-color: var(--blue); }
+    .notif-badge {
+      position: absolute; top: -6px; right: -6px;
+      background: var(--red); color: #fff;
+      font-size: 0.65rem; font-weight: 700;
+      border-radius: 50%; width: 18px; height: 18px;
+      display: flex; align-items: center; justify-content: center;
+      display: none;
+    }
+
+    /* ── Notification panel (slide-in) ── */
+    .notif-panel {
+      position: fixed; top: 0; right: -400px;
+      width: 380px; height: 100vh;
+      background: var(--surface); border-left: 1px solid var(--border);
+      z-index: 999; transition: right 0.3s ease;
+      display: flex; flex-direction: column;
+      box-shadow: -4px 0 20px rgba(0,0,0,0.4);
+    }
+    .notif-panel.open { right: 0; }
+    .notif-panel-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .notif-panel-header h3 { margin: 0; font-size: 1rem; color: var(--text); }
+    .notif-close {
+      cursor: pointer; color: var(--muted); font-size: 1.2rem;
+      background: none; border: none;
+    }
+    .notif-close:hover { color: var(--red); }
+    .notif-list { flex: 1; overflow-y: auto; padding: 12px; }
+    .notif-item {
+      background: #0d1117; border: 1px solid var(--border);
+      border-radius: 8px; padding: 12px; margin-bottom: 10px;
+      border-left: 3px solid var(--red);
+    }
+    .notif-item.unread { border-left-color: var(--red); }
+    .notif-item.read   { border-left-color: var(--border); opacity: 0.7; }
+    .notif-msg   { font-size: 0.85rem; color: var(--text); margin-bottom: 6px; }
+    .notif-meta  { font-size: 0.73rem; color: var(--muted); }
+    .notif-person { color: var(--blue); font-weight: 600; }
+    .notif-score  {
+      display: inline-block; padding: 2px 8px; border-radius: 10px;
+      font-size: 0.72rem; font-weight: 700; margin-left: 6px;
+    }
+    .mark-read-btn {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--muted); border-radius: 6px; padding: 4px 12px;
+      font-size: 0.78rem; cursor: pointer;
+    }
+    .mark-read-btn:hover { border-color: var(--green); color: var(--green); }
+
+    /* ── Toast popup ── */
+    .toast-container {
+      position: fixed; bottom: 24px; right: 24px;
+      z-index: 1000; display: flex; flex-direction: column; gap: 10px;
+    }
+    .toast {
+      background: var(--surface); border: 1px solid var(--red);
+      border-left: 4px solid var(--red); border-radius: 10px;
+      padding: 14px 18px; min-width: 300px; max-width: 380px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      animation: slideIn 0.3s ease;
+    }
+    .toast-title { font-size: 0.8rem; color: var(--red); font-weight: 700; margin-bottom: 4px; }
+    .toast-body  { font-size: 0.85rem; color: var(--text); }
+    .toast-time  { font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+    @keyframes slideIn { from { transform: translateX(120%); opacity:0; } to { transform: translateX(0); opacity:1; } }
+    @keyframes slideOut { from { transform: translateX(0); opacity:1; } to { transform: translateX(120%); opacity:0; } }
+
+    .btn-logout {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--muted); border-radius: 6px;
+      padding: 4px 14px; font-size: 0.85rem; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-logout:hover { border-color: var(--red); color: var(--red); }
+    #last-update { color: var(--muted); font-size: 0.8rem; }
+
+    /* ── Layout ── */
+    .main { padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
+    .row { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+    }
+    .card-title {
+      color: var(--muted); font-size: 0.78rem;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }
+
+    /* ── Security Score gauge ── */
+    .score-card {
+      flex: 0 0 260px;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    #gaugeCanvas { display: block; }
+    .score-status {
+      font-size: 1rem; font-weight: 700; letter-spacing: 0.12em;
+      margin-top: 6px; text-transform: uppercase;
+    }
+    .score-reason { color: var(--muted); font-size: 0.78rem; text-align: center; margin-top: 4px; }
+
+    /* ── Alert panel ── */
+    .alert-card { flex: 1; min-width: 280px; }
+    .alert-list { max-height: 200px; overflow-y: auto; }
+    .alert-item {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 8px 10px; border-radius: 8px;
+      background: rgba(248,81,73,0.08);
+      border: 1px solid rgba(248,81,73,0.2);
+      margin-bottom: 8px; font-size: 0.85rem;
+    }
+    .alert-item .icon { font-size: 1.1rem; flex-shrink: 0; }
+    .alert-item .msg { color: var(--text); line-height: 1.35; }
+    .alert-item .ts  { color: var(--muted); font-size: 0.72rem; }
+    .no-alerts { color: var(--green); font-size: 0.9rem; }
+
+    /* ── Sensor cards row ── */
+    .sensor-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 1100px) { .sensor-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width:  600px) { .sensor-grid { grid-template-columns: repeat(2, 1fr); } }
+
+    .sensor-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      transition: border-color 0.3s;
+    }
+    .sensor-card .s-icon { font-size: 1.6rem; }
+    .sensor-card .s-label { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em; margin: 4px 0; }
+    .sensor-card .s-value { font-size: 1.7rem; font-weight: 700; line-height: 1.1; }
+    .sensor-card .s-unit  { color: var(--muted); font-size: 0.8rem; }
+    .sensor-card .s-badge {
+      display: inline-block; margin-top: 6px;
+      font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; font-weight: 600;
+    }
+    .badge-normal   { background: rgba(63,185,80,.15); color: var(--green); border: 1px solid rgba(63,185,80,.3); }
+    .badge-warning  { background: rgba(210,153,34,.15); color: var(--yellow); border: 1px solid rgba(210,153,34,.3); }
+    .badge-critical { background: rgba(240,136,62,.15); color: var(--orange); border: 1px solid rgba(240,136,62,.3); }
+    .badge-breach   { background: rgba(248,81,73,.15); color: var(--red); border: 1px solid rgba(248,81,73,.3); }
+
+    /* ── Charts ── */
+    .chart-card { flex: 1; min-width: 300px; }
+    .chart-card canvas { max-height: 200px; }
+
+    /* ── Tables ── */
+    .table-card { flex: 1; min-width: 300px; }
+    .data-table {
+      width: 100%; border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+    .data-table th {
+      color: var(--muted); font-weight: 600; font-size: 0.74rem;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      border-bottom: 1px solid var(--border); padding: 6px 10px; text-align: left;
+    }
+    .data-table td { padding: 7px 10px; border-bottom: 1px solid rgba(48,54,61,0.5); color: #e6edf3; }
+    .data-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+    .table-scroll { max-height: 220px; overflow-y: auto; }
+    .valid-yes { color: var(--green); font-weight: 600; }
+    .valid-no  { color: var(--red);   font-weight: 600; }
+
+    /* ── Status colors ── */
+    .col-normal   { color: var(--green);  }
+    .col-warning  { color: var(--yellow); }
+    .col-critical { color: var(--orange); }
+    .col-breach   { color: var(--red); animation: blink-anim 0.7s infinite; }
+    @keyframes blink-anim { 50% { opacity: 0.3; } }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+<!-- ── Navbar ─────────────────────────────────────────────── -->
+<nav class="navbar">
+  <div class="navbar-brand">&#128421; Server Room Monitor</div>
+  <div class="nav-right">
+    <span class="connection-dot" id="connDot"></span>
+    <span id="connLabel" style="color:var(--muted);font-size:.82rem;">Connecting…</span>
+    <span id="last-update"></span>
+    <button class="notif-btn" onclick="toggleNotifPanel()" id="notifBtn">
+      🔔
+      <span class="notif-badge" id="notifBadge">0</span>
+    </button>
+    <button class="btn-logout" onclick="location.href='/logout'">Logout</button>
+  </div>
+</nav>
+
+<!-- ── Notification Panel ─────────────────────────────────── -->
+<div class="notif-panel" id="notifPanel">
+  <div class="notif-panel-header">
+    <h3>🔔 Notifications</h3>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="mark-read-btn" onclick="markAllRead()">Mark all read</button>
+      <button class="notif-close" onclick="toggleNotifPanel()">✕</button>
+    </div>
+  </div>
+  <div class="notif-list" id="notifList">
+    <div style="color:var(--muted);font-size:.85rem;text-align:center;padding:20px;">No notifications yet</div>
+  </div>
+</div>
+
+<!-- ── Toast Container ────────────────────────────────────── -->
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="main">
+
+  <!-- ── Row 1: Score + Alert ─────────────────────────────── -->
+  <div class="row">
+
+    <!-- Security Score Gauge -->
+    <div class="card score-card">
+      <div class="card-title">&#128272; Security Score</div>
+      <canvas id="gaugeCanvas" width="220" height="130"></canvas>
+      <div class="score-status" id="scoreStatus">—</div>
+      <div class="score-reason" id="scoreReason">Waiting for data…</div>
+    </div>
+
+    <!-- Alert Panel -->
+    <div class="card alert-card">
+      <div class="card-title" style="display:flex;justify-content:space-between;">
+        <span>&#9888;&#65039; Active Alerts</span>
+        <span id="alertCount" style="color:var(--muted);font-size:.8rem;">0 alerts</span>
+      </div>
+      <div class="alert-list" id="alertList">
+        <span class="no-alerts">&#10003; No active alerts</span>
+      </div>
+    </div>
+
+    <!-- System Info -->
+    <div class="card" style="min-width:180px;">
+      <div class="card-title">&#128336; System</div>
+      <div style="font-size:.85rem; line-height:2; color:#e6edf3;">
+        <div>Time: <span id="sysTime" style="color:var(--blue)">—</span></div>
+        <div>Mode: <span id="sysMode" style="color:var(--yellow)">—</span></div>
+        <div>Door: <span id="sysDoor">—</span></div>
+        <div>Motion: <span id="sysMotion">—</span></div>
+        <div>Last NFC: <span id="sysNFC" style="color:var(--blue)">—</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Row 2: Sensor Cards ──────────────────────────────── -->
+  <div class="sensor-grid">
+    <div class="sensor-card" id="card-temp-s">
+      <div class="s-icon">&#x1F321;</div>
+      <div class="s-label">Server Temp</div>
+      <div class="s-value" id="val-temp-s">—</div>
+      <div class="s-unit">°C</div>
+      <span class="s-badge badge-normal" id="badge-temp-s">Normal</span>
+    </div>
+    <div class="sensor-card" id="card-temp-r">
+      <div class="s-icon">&#127777;</div>
+      <div class="s-label">Room Temp</div>
+      <div class="s-value" id="val-temp-r">—</div>
+      <div class="s-unit">°C</div>
+      <span class="s-badge badge-normal" id="badge-temp-r">Normal</span>
+    </div>
+    <div class="sensor-card" id="card-hum">
+      <div class="s-icon">&#128167;</div>
+      <div class="s-label">Humidity</div>
+      <div class="s-value" id="val-hum">—</div>
+      <div class="s-unit">%</div>
+      <span class="s-badge badge-normal" id="badge-hum">Normal</span>
+    </div>
+    <div class="sensor-card" id="card-co2">
+      <div class="s-icon">&#127807;</div>
+      <div class="s-label">CO₂ Level</div>
+      <div class="s-value" id="val-co2">—</div>
+      <div class="s-unit">ppm</div>
+      <span class="s-badge badge-normal" id="badge-co2">Normal</span>
+    </div>
+    <div class="sensor-card" id="card-door">
+      <div class="s-icon">&#128682;</div>
+      <div class="s-label">Door</div>
+      <div class="s-value" style="font-size:1.1rem;" id="val-door">—</div>
+      <div class="s-unit">&nbsp;</div>
+      <span class="s-badge badge-normal" id="badge-door">Closed</span>
+    </div>
+    <div class="sensor-card" id="card-motion">
+      <div class="s-icon">&#128100;</div>
+      <div class="s-label">PIR Motion</div>
+      <div class="s-value" style="font-size:1.1rem;" id="val-motion">—</div>
+      <div class="s-unit">&nbsp;</div>
+      <span class="s-badge badge-normal" id="badge-motion">Clear</span>
+    </div>
+  </div>
+
+  <!-- ── Row 3: Charts ────────────────────────────────────── -->
+  <div class="row">
+    <div class="card chart-card">
+      <div class="card-title">&#128200; Temperature History</div>
+      <canvas id="tempChart"></canvas>
+    </div>
+    <div class="card chart-card">
+      <div class="card-title">&#128201; CO₂ &amp; Humidity History</div>
+      <canvas id="envChart"></canvas>
+    </div>
+  </div>
+
+  <!-- ── Row 4: Access Log + Alert History ─────────────────── -->
+  <div class="row">
+    <div class="card table-card">
+      <div class="card-title">&#128196; Access Log</div>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Day</th><th>Time</th><th>Person</th><th>UID</th><th>Valid</th><th>Door</th><th>Hours</th>
+            </tr>
+          </thead>
+          <tbody id="accessLogBody">
+            <tr><td colspan="7" style="color:var(--muted)">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card table-card">
+      <div class="card-title">&#128680; Alert History</div>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Day</th><th>Time</th><th>Person</th><th>Type</th><th>Score</th><th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="alertHistoryBody">
+            <tr><td colspan="6" style="color:var(--muted)">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+// ── Chart.js setup ────────────────────────────────────────────
+const chartDefaults = {
+  animation: false,
+  responsive: true,
+  maintainAspectRatio: true,
+  plugins: { legend: { labels: { color: '#8b949e', font: { size: 11 } } } },
+  scales: {
+    x: { ticks: { color: '#8b949e', maxTicksLimit: 8, font:{size:10} }, grid: { color: '#21262d' } },
+    y: { ticks: { color: '#8b949e', font:{size:10} }, grid: { color: '#21262d' } },
+  }
+};
+
+const MAX_POINTS = 25;
+const labels     = [];
+const tempSData  = [], tempRData = [];
+const co2Data    = [], humData   = [];
+
+const tempChart = new Chart(document.getElementById('tempChart'), {
+  type: 'line',
+  data: {
+    labels,
+    datasets: [
+      { label: 'Server °C', data: tempSData, borderColor: '#f85149', backgroundColor: 'rgba(248,81,73,.08)', tension: 0.4, pointRadius: 2, fill: true },
+      { label: 'Room °C',   data: tempRData, borderColor: '#58a6ff', backgroundColor: 'rgba(88,166,255,.08)', tension: 0.4, pointRadius: 2, fill: true },
+    ]
+  },
+  options: { ...chartDefaults }
+});
+
+const envChart = new Chart(document.getElementById('envChart'), {
+  type: 'line',
+  data: {
+    labels,
+    datasets: [
+      { label: 'CO₂ ppm', data: co2Data, borderColor: '#d29922', backgroundColor: 'rgba(210,153,34,.08)', tension: 0.4, pointRadius: 2, fill: true, yAxisID: 'yCO2' },
+      { label: 'Humidity %', data: humData, borderColor: '#3fb950', backgroundColor: 'rgba(63,185,80,.08)', tension: 0.4, pointRadius: 2, fill: true, yAxisID: 'yHum' },
+    ]
+  },
+  options: {
+    ...chartDefaults,
+    scales: {
+      x:    { ticks:{ color:'#8b949e', maxTicksLimit:8, font:{size:10} }, grid:{ color:'#21262d' } },
+      yCO2: { position:'left',  ticks:{ color:'#d29922', font:{size:10} }, grid:{ color:'#21262d' } },
+      yHum: { position:'right', ticks:{ color:'#3fb950', font:{size:10} }, grid:{ drawOnChartArea:false } },
+    }
+  }
+});
+
+function pushToCharts(ts, ts_val, tr, co2, hum) {
+  const t = ts.substring(11, 16);  // HH:MM
+  labels.push(t);   tempSData.push(ts_val); tempRData.push(tr);
+  co2Data.push(co2); humData.push(hum);
+  if (labels.length > MAX_POINTS) {
+    [labels, tempSData, tempRData, co2Data, humData].forEach(a => a.shift());
+  }
+  tempChart.update();
+  envChart.update();
+}
+
+// ── Gauge ─────────────────────────────────────────────────────
+function scoreColor(s) {
+  return s <= 30 ? '#3fb950' : s <= 60 ? '#d29922' : s <= 80 ? '#f0883e' : '#f85149';
+}
+
+function drawGauge(score) {
+  const canvas = document.getElementById('gaugeCanvas');
+  const ctx    = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  const cx = w / 2, cy = h - 14, r = 80;
+
+  ctx.clearRect(0, 0, w, h);
+
+  // Background track
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, Math.PI, 2 * Math.PI);
+  ctx.lineWidth = 18; ctx.strokeStyle = '#21262d';
+  ctx.lineCap = 'round'; ctx.stroke();
+
+  // Coloured fill
+  if (score > 0) {
+    const end   = Math.PI + (Math.min(score, 100) / 100) * Math.PI;
+    const color = scoreColor(score);
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, Math.PI, end);
+    ctx.lineWidth = 18; ctx.strokeStyle = color;
+    ctx.lineCap = 'round'; ctx.stroke();
+  }
+
+  // Score number
+  const color = scoreColor(score);
+  ctx.fillStyle = color;
+  ctx.font = 'bold 34px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(score, cx, cy - 18);
+
+  ctx.fillStyle = '#8b949e';
+  ctx.font = '11px monospace';
+  ctx.fillText('/ 100', cx, cy);
+}
+
+// ── Sensor card helpers ───────────────────────────────────────
+function setVal(id, v) { document.getElementById(id).textContent = v; }
+
+function sensorBadge(id, level, labels) {
+  const el = document.getElementById(id);
+  el.className = 's-badge badge-' + level;
+  el.textContent = labels[level] || level;
+}
+
+function tempLevel(v, warn, crit) {
+  return v > crit ? 'critical' : v > warn ? 'warning' : 'normal';
+}
+
+function updateCards(d) {
+  // Server temp
+  const ts_val = parseFloat(d.temp_s).toFixed(1);
+  setVal('val-temp-s', ts_val);
+  const tlS = tempLevel(+ts_val, 40, 50);
+  sensorBadge('badge-temp-s', tlS, {normal:'Normal', warning:'Warm', critical:'OVERHEAT'});
+  document.getElementById('card-temp-s').style.borderColor =
+    tlS === 'critical' ? '#f85149' : tlS === 'warning' ? '#d29922' : '#30363d';
+
+  // Room temp
+  const tr_val = parseFloat(d.temp_r).toFixed(1);
+  setVal('val-temp-r', tr_val);
+  const tlR = tempLevel(+tr_val, 28, 35);
+  sensorBadge('badge-temp-r', tlR, {normal:'Normal', warning:'Warm', critical:'HOT'});
+  document.getElementById('card-temp-r').style.borderColor =
+    tlR === 'critical' ? '#f85149' : tlR === 'warning' ? '#d29922' : '#30363d';
+
+  // Humidity
+  const hum_val = parseFloat(d.hum).toFixed(1);
+  setVal('val-hum', hum_val);
+  const hlv = +hum_val > 85 ? 'critical' : +hum_val > 70 ? 'warning' : 'normal';
+  sensorBadge('badge-hum', hlv, {normal:'Normal', warning:'High', critical:'CRITICAL'});
+
+  // CO2
+  const co2_val = parseInt(d.co2);
+  setVal('val-co2', co2_val);
+  const clv = co2_val > 1000 ? 'critical' : co2_val > 600 ? 'warning' : 'normal';
+  sensorBadge('badge-co2', clv, {normal:'Good', warning:'Elevated', critical:'DANGER'});
+
+  // Door
+  const doorOpen = parseInt(d.door) === 1;
+  setVal('val-door', doorOpen ? 'OPEN' : 'CLOSED');
+  const dlv = doorOpen ? (parseInt(d.nfc_valid) ? 'warning' : 'breach') : 'normal';
+  sensorBadge('badge-door', dlv === 'breach' ? 'critical' : dlv,
+    {normal:'Secured', warning:'Open-Auth', critical:'BREACH'});
+  document.getElementById('card-door').style.borderColor =
+    doorOpen ? (parseInt(d.nfc_valid) ? '#d29922' : '#f85149') : '#30363d';
+
+  // Motion
+  const motion = parseInt(d.motion) === 1;
+  setVal('val-motion', motion ? 'DETECTED' : 'Clear');
+  const mlv = motion ? (parseInt(d.nfc_valid) ? 'warning' : 'critical') : 'normal';
+  sensorBadge('badge-motion', mlv, {normal:'Clear', warning:'Authorised', critical:'INTRUDER'});
+  document.getElementById('card-motion').style.borderColor =
+    motion ? (parseInt(d.nfc_valid) ? '#d29922' : '#f85149') : '#30363d';
+}
+
+function updateSystemInfo(d) {
+  setVal('sysTime', d.timestamp ? d.timestamp.substring(11,16) : '—');
+  const ah = parseInt(d.after_hours);
+  document.getElementById('sysMode').textContent = ah ? 'After Hours' : 'Working Hours';
+  document.getElementById('sysMode').style.color  = ah ? '#f85149' : '#3fb950';
+  const door = parseInt(d.door);
+  document.getElementById('sysDoor').innerHTML =
+    `<span style="color:${door ? '#f85149':'#3fb950'}">${door ? 'OPEN' : 'Closed'}</span>`;
+  const motion = parseInt(d.motion);
+  document.getElementById('sysMotion').innerHTML =
+    `<span style="color:${motion ? '#f0883e':'#3fb950'}">${motion ? 'MOTION' : 'Clear'}</span>`;
+  document.getElementById('sysNFC').textContent = d.nfc_uid || 'None';
+}
+
+// ── Alert panel ───────────────────────────────────────────────
+let activeAlerts = [];
+
+function updateAlertPanel(d) {
+  if (!parseInt(d.alert)) { activeAlerts = []; }
+  else {
+    const types = (d.alert_type || '').split(',').filter(Boolean);
+    const entry = { ts: d.timestamp, types, score: d.risk_score };
+    // Keep only recent
+    activeAlerts.unshift(entry);
+    if (activeAlerts.length > 10) activeAlerts.pop();
+  }
+
+  const list = document.getElementById('alertList');
+  document.getElementById('alertCount').textContent = activeAlerts.length + ' alert(s)';
+
+  if (activeAlerts.length === 0) {
+    list.innerHTML = '<span class="no-alerts">&#10003; No active alerts</span>';
+    return;
+  }
+
+  const iconMap = {
+    unauthorized_access: '&#128682;', motion_no_auth: '&#128100;',
+    server_overheat: '&#128293;', room_overheat: '&#127777;',
+    high_humidity: '&#128167;', high_co2: '&#127807;'
+  };
+  list.innerHTML = activeAlerts.map(a =>
+    a.types.map(t => `
+      <div class="alert-item">
+        <span class="icon">${iconMap[t] || '&#9888;'}</span>
+        <div>
+          <div class="msg">${t.replace(/_/g,' ').toUpperCase()}</div>
+          <div class="ts">${a.ts || ''} &bull; Score: ${a.score}</div>
+        </div>
+      </div>`).join('')
+  ).join('');
+}
+
+// ── Score & status ────────────────────────────────────────────
+function updateScore(d) {
+  const score  = parseInt(d.risk_score) || 0;
+  const status = (d.risk_status || 'normal').toLowerCase();
+  drawGauge(score);
+
+  const el = document.getElementById('scoreStatus');
+  el.textContent = status.toUpperCase();
+  el.className   = 'score-status col-' + status;
+
+  document.getElementById('scoreReason').textContent = d.risk_reason || '';
+}
+
+// ── Main update (called on socket event or polling) ───────────
+function applyUpdate(d) {
+  updateCards(d);
+  updateSystemInfo(d);
+  updateScore(d);
+  updateAlertPanel(d);
+  pushToCharts(d.timestamp || '', d.temp_s, d.temp_r, d.co2, d.hum);
+  document.getElementById('last-update').textContent =
+    'Updated ' + (d.timestamp ? d.timestamp.substring(11,19) : '');
+}
+
+// ── Access log table ──────────────────────────────────────────
+function loadAccessLog() {
+  fetch('/api/access_log').then(r=>r.json()).then(rows => {
+    const tbody = document.getElementById('accessLogBody');
+    if (!rows.length) { tbody.innerHTML = '<tr><td colspan="7" style="color:var(--muted)">No records</td></tr>'; return; }
+    tbody.innerHTML = rows.map(r => `
+      <tr>
+        <td>${r.day||'—'}</td>
+        <td>${(r.timestamp||'').substring(11,19)}</td>
+        <td style="color:var(--blue)">${r.person_name||'Unknown'}</td>
+        <td style="font-family:monospace;font-size:.75rem">${r.nfc_uid||'—'}</td>
+        <td class="${r.nfc_valid ? 'valid-yes':'valid-no'}">${r.nfc_valid ? '✓ Yes':'✗ No'}</td>
+        <td>${r.door_open ? 'Open':'Closed'}</td>
+        <td style="color:${r.after_hours ? 'var(--red)':'var(--green)'}">${r.after_hours ? 'After hrs':'Working'}</td>
+      </tr>`).join('');
+  }).catch(()=>{});
+}
+
+// ── Alert history table ───────────────────────────────────────
+function loadAlertHistory() {
+  fetch('/api/alerts').then(r=>r.json()).then(rows => {
+    const tbody = document.getElementById('alertHistoryBody');
+    if (!rows.length) { tbody.innerHTML = '<tr><td colspan="6" style="color:var(--muted)">No alerts</td></tr>'; return; }
+    tbody.innerHTML = rows.map(r => {
+      const sc = parseInt(r.risk_score);
+      const cl = sc > 80 ? 'col-breach' : sc > 60 ? 'col-critical' : sc > 30 ? 'col-warning' : 'col-normal';
+      return `
+        <tr>
+          <td>${r.day||'—'}</td>
+          <td>${(r.timestamp||'').substring(11,19)}</td>
+          <td style="color:var(--blue)">${r.person_name||'—'}</td>
+          <td style="font-size:.75rem">${(r.alert_type||'').replace(/,/g,', ')}</td>
+          <td class="${cl}">${r.risk_score}</td>
+          <td class="${cl}">${(r.risk_status||'').toUpperCase()}</td>
+        </tr>`;
+    }).join('');
+  }).catch(()=>{});
+}
+
+// ── Notification panel ────────────────────────────────────────
+let unreadCount = 0;
+
+function toggleNotifPanel() {
+  const panel = document.getElementById('notifPanel');
+  panel.classList.toggle('open');
+}
+
+function markAllRead() {
+  fetch('/api/notifications/read', {method:'POST'}).then(()=>{
+    unreadCount = 0;
+    updateBadge();
+    document.querySelectorAll('.notif-item').forEach(el => {
+      el.classList.remove('unread');
+      el.classList.add('read');
+    });
+  });
+}
+
+function updateBadge() {
+  const badge = document.getElementById('notifBadge');
+  if (unreadCount > 0) {
+    badge.style.display = 'flex';
+    badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function addNotificationToPanel(n) {
+  const list = document.getElementById('notifList');
+  const empty = list.querySelector('div');
+  if (empty) empty.remove();
+
+  const sc = parseInt(n.risk_score);
+  const div = document.createElement('div');
+  div.className = 'notif-item unread';
+  div.innerHTML = `
+    <div class="notif-msg">${n.message}</div>
+    <div class="notif-meta">
+      <span>${n.day||''} ${(n.timestamp||'').substring(11,19)}</span>
+      ${n.person_name && n.person_name !== 'Unknown' ?
+        `<span class="notif-person"> · ${n.person_name}</span>` : ''}
+      <span class="notif-score" style="background:${scoreColor(sc)}22;color:${scoreColor(sc)};border:1px solid ${scoreColor(sc)}44">
+        Score: ${sc}
+      </span>
+    </div>`;
+  list.insertBefore(div, list.firstChild);
+}
+
+function showToast(n) {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = `
+    <div class="toast-title">⚠️ ALERT — ${(n.risk_status||'').toUpperCase()}</div>
+    <div class="toast-body">${n.message}</div>
+    <div class="toast-time">${n.day||''} ${(n.timestamp||'').substring(11,19)}
+      ${n.person_name && n.person_name !== 'Unknown' ? ' · ' + n.person_name : ''}
+    </div>`;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = 'slideOut 0.3s ease forwards';
+    setTimeout(() => toast.remove(), 300);
+  }, 5000);
+}
+
+function loadNotifications() {
+  fetch('/api/notifications').then(r=>r.json()).then(rows => {
+    unreadCount = rows.filter(r => !r.read).length;
+    updateBadge();
+    if (!rows.length) return;
+    const list = document.getElementById('notifList');
+    list.innerHTML = '';
+    rows.forEach(n => {
+      const sc = parseInt(n.risk_score);
+      const div = document.createElement('div');
+      div.className = 'notif-item ' + (n.read ? 'read' : 'unread');
+      div.innerHTML = `
+        <div class="notif-msg">${n.message}</div>
+        <div class="notif-meta">
+          <span>${n.day||''} ${(n.timestamp||'').substring(11,19)}</span>
+          ${n.person_name && n.person_name !== 'Unknown' ?
+            `<span class="notif-person"> · ${n.person_name}</span>` : ''}
+          <span class="notif-score" style="background:${scoreColor(sc)}22;color:${scoreColor(sc)};border:1px solid ${scoreColor(sc)}44">
+            Score: ${sc}
+          </span>
+        </div>`;
+      list.appendChild(div);
+    });
+  }).catch(()=>{});
+}
+
+// ── Load chart history on page load ──────────────────────────
+function loadHistory() {
+  fetch('/api/history').then(r=>r.json()).then(rows => {
+    rows.reverse().forEach(r => {
+      pushToCharts(r.timestamp||'', r.temp_s, r.temp_r, r.co2, r.hum);
+    });
+  }).catch(()=>{});
+}
+
+// ── Socket.IO ─────────────────────────────────────────────────
+const socket = io({ transports: ['websocket','polling'] });
+
+socket.on('connect', () => {
+  document.getElementById('connDot').classList.add('live');
+  document.getElementById('connLabel').textContent = 'Live';
+  document.getElementById('connLabel').style.color  = '#3fb950';
+  // Pull latest snapshot immediately
+  fetch('/api/latest').then(r=>r.json()).then(d => { if (d.id) applyUpdate(d); }).catch(()=>{});
+});
+
+socket.on('disconnect', () => {
+  document.getElementById('connDot').classList.remove('live');
+  document.getElementById('connLabel').textContent = 'Disconnected';
+  document.getElementById('connLabel').style.color  = '#f85149';
+});
+
+socket.on('sensor_update', d => applyUpdate(d));
+
+socket.on('new_notification', n => {
+  addNotificationToPanel(n);
+  showToast(n);
+  unreadCount++;
+  updateBadge();
+  // Refresh alert history table immediately so new alert appears right away
+  loadAlertHistory();
+});
+
+socket.on('access_event', e => {
+  // Prepend new row to access log table instantly
+  const tbody = document.getElementById('accessLogBody');
+  const isValid = parseInt(e.nfc_valid);
+  const row = document.createElement('tr');
+  row.innerHTML = `
+    <td>${e.day||'—'}</td>
+    <td>${(e.timestamp||'').substring(11,19)}</td>
+    <td style="color:var(--blue)">${e.person_name||'Unknown'}</td>
+    <td style="font-family:monospace;font-size:.75rem">${e.nfc_uid||'—'}</td>
+    <td class="${isValid ? 'valid-yes':'valid-no'}">${isValid ? '✓ Yes':'✗ No'}</td>
+    <td>${e.door ? 'Open':'Closed'}</td>
+    <td style="color:${e.after_hours ? 'var(--red)':'var(--green)'}">${e.after_hours ? 'After hrs':'Working'}</td>`;
+  tbody.insertBefore(row, tbody.firstChild);
+
+  // Show access toast (green for granted, red for denied)
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  const granted = parseInt(e.nfc_valid);
+  toast.className = 'toast';
+  toast.style.borderColor = granted ? 'var(--green)' : 'var(--red)';
+  toast.style.borderLeftColor = granted ? 'var(--green)' : 'var(--red)';
+  toast.innerHTML = `
+    <div class="toast-title" style="color:${granted ? 'var(--green)':'var(--red)'}">
+      ${granted ? '✅ Access Granted' : '❌ Access Denied'}
+    </div>
+    <div class="toast-body">${e.person_name||e.nfc_uid||'Unknown'}</div>
+    <div class="toast-time">${e.day||''} ${(e.timestamp||'').substring(11,19)}
+      ${e.after_hours ? ' · After Hours' : ''}
+    </div>`;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = 'slideOut 0.3s ease forwards';
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
+
+  // Re-fetch access log from DB after 1 s so new row appears in the table
+  setTimeout(() => loadAccessLog(), 800);
+});
+
+// ── Init ──────────────────────────────────────────────────────
+drawGauge(0);
+loadHistory();
+loadAccessLog();
+loadAlertHistory();
+loadNotifications();
+// Refresh tables every 5 s so the history stays current without waiting
+setInterval(() => { loadAccessLog(); loadAlertHistory(); loadNotifications(); }, 5000);
+</script>
+</body>
+</html>
