@@ -1,4 +1,4 @@
-/* ── Reset & Base ── */
+﻿
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
@@ -35,11 +35,9 @@ img { max-width: 100%; }
 
 .container { max-width: 1140px; margin: 0 auto; padding: 0 24px; }
 
-/* ── Scroll animations ── */
 .fade-in { opacity: 0; transform: translateY(28px); transition: opacity .6s ease, transform .6s ease; }
 .fade-in.visible { opacity: 1; transform: none; }
 
-/* ── Section shared ── */
 section { padding: 96px 0; }
 section:nth-child(even) { background: var(--bg2); }
 
@@ -64,7 +62,6 @@ h2 {
   line-height: 1.2;
 }
 
-/* ── Buttons ── */
 .btn-primary {
   display: inline-flex;
   align-items: center;
@@ -94,7 +91,6 @@ h2 {
 }
 .btn-outline:hover { border-color: var(--accent); background: rgba(0,212,255,.06); opacity: 1; }
 
-/* ── NAVBAR ── */
 #navbar {
   position: fixed; top: 0; left: 0; right: 0; z-index: 100;
   transition: background .3s, box-shadow .3s;
@@ -130,7 +126,6 @@ h2 {
 }
 .hamburger span { display: block; width: 22px; height: 2px; background: var(--text); border-radius: 2px; transition: .3s; }
 
-/* ── HERO ── */
 #hero {
   min-height: 100vh;
   display: flex; align-items: center; justify-content: center;
@@ -202,7 +197,6 @@ h1 {
 }
 @keyframes bounce { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(8px)} }
 
-/* ── ABOUT ── */
 .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
 .about-text p { color: var(--muted); margin-bottom: 16px; }
 .about-text strong { color: var(--text); }
@@ -220,7 +214,6 @@ h1 {
 .mini-card h4 { font-size: .95rem; font-weight: 700; margin-bottom: 6px; }
 .mini-card p { font-size: .82rem; color: var(--muted); line-height: 1.5; }
 
-/* ── FEATURES ── */
 .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 .feature-card {
   background: var(--card-bg);
@@ -234,7 +227,6 @@ h1 {
 .feature-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 10px; }
 .feature-card p { font-size: .875rem; color: var(--muted); line-height: 1.6; }
 
-/* ── ARCHITECTURE ── */
 .arch-wrapper { display: flex; flex-direction: column; align-items: center; gap: 0; }
 .arch-layer {
   width: 100%; max-width: 760px;
@@ -270,7 +262,6 @@ h1 {
 }
 .arch-arrow i { animation: bounce 1.6s infinite; }
 
-/* ── HARDWARE ── */
 .hw-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
 .hw-card {
   background: var(--card-bg);
@@ -292,7 +283,6 @@ h1 {
   border-radius: 6px; padding: 4px 8px;
 }
 
-/* ── AI ENGINE ── */
 .ai-wrapper { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
 .ai-text p { color: var(--muted); margin-bottom: 16px; }
 .ai-text strong { color: var(--text); }
@@ -322,7 +312,6 @@ h1 {
 .factor-table td:nth-child(2) { color: var(--accent); font-weight: 700; font-family: 'Fira Code', monospace; }
 .ai-factors h4 { margin-bottom: 16px; font-size: 1rem; font-weight: 700; }
 
-/* ── GITHUB ── */
 #github { background: var(--bg2); }
 .github-wrapper { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
 .github-card, .clone-card {
@@ -373,7 +362,6 @@ code {
 .requirements li { font-size: .85rem; color: var(--muted); padding: 5px 0; display: flex; align-items: center; gap: 8px; }
 .requirements li i { color: var(--green); font-size: .75rem; }
 
-/* ── CONTACT ── */
 .contact-wrapper { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
 .contact-info p { color: var(--muted); margin-bottom: 28px; }
 .contact-items { display: flex; flex-direction: column; gap: 20px; }
@@ -394,7 +382,6 @@ code {
 .contact-badge p { color: var(--muted); font-size: .9rem; }
 .contact-year { margin-top: 8px; color: var(--accent) !important; font-weight: 600; }
 
-/* ── FOOTER ── */
 footer {
   background: var(--bg);
   border-top: 1px solid var(--border);
@@ -410,7 +397,6 @@ footer p { color: var(--muted); font-size: .875rem; }
 .footer-links a:hover { color: var(--accent); }
 .footer-copy { font-size: .78rem !important; }
 
-/* ── RESPONSIVE ── */
 @media (max-width: 900px) {
   .about-grid, .ai-wrapper, .contact-wrapper { grid-template-columns: 1fr; }
   .features-grid { grid-template-columns: repeat(2, 1fr); }

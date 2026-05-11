@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -10,7 +10,7 @@
 </head>
 <body>
 
-  <!-- ── NAV ── -->
+  
   <nav id="navbar">
     <div class="nav-inner">
       <a class="logo" href="#hero">
@@ -31,7 +31,7 @@
     </div>
   </nav>
 
-  <!-- ── HERO ── -->
+  
   <section id="hero">
     <div class="hero-bg"></div>
     <div class="hero-content">
@@ -57,7 +57,7 @@
     <div class="scroll-hint"><i class="fa-solid fa-chevron-down"></i></div>
   </section>
 
-  <!-- ── ABOUT ── -->
+  
   <section id="about">
     <div class="container">
       <div class="section-label">Overview</div>
@@ -111,7 +111,7 @@
     </div>
   </section>
 
-  <!-- ── FEATURES ── -->
+  
   <section id="features">
     <div class="container">
       <div class="section-label">Capabilities</div>
@@ -166,7 +166,7 @@
     </div>
   </section>
 
-  <!-- ── ARCHITECTURE ── -->
+  
   <section id="architecture">
     <div class="container">
       <div class="section-label">System Design</div>
@@ -205,7 +205,7 @@
     </div>
   </section>
 
-  <!-- ── HARDWARE ── -->
+  
   <section id="hardware">
     <div class="container">
       <div class="section-label">Components</div>
@@ -263,7 +263,7 @@
     </div>
   </section>
 
-  <!-- ── AI ENGINE ── -->
+  
   <section id="ai">
     <div class="container">
       <div class="section-label">Intelligence</div>
@@ -308,7 +308,7 @@
     </div>
   </section>
 
-  <!-- ── GITHUB ── -->
+  
   <section id="github">
     <div class="container">
       <div class="section-label">Open Source</div>
@@ -369,7 +369,7 @@
     </div>
   </section>
 
-  <!-- ── CONTACT ── -->
+  
   <section id="contact">
     <div class="container">
       <div class="section-label">Get in Touch</div>
@@ -410,7 +410,7 @@
     </div>
   </section>
 
-  <!-- ── FOOTER ── -->
+  
   <footer>
     <div class="container footer-inner">
       <div class="footer-logo">
@@ -426,24 +426,21 @@
   </footer>
 
   <script>
-    // Navbar scroll effect
+
     window.addEventListener('scroll', () => {
       document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
     });
 
-    // Hamburger menu
     document.getElementById('hamburger').addEventListener('click', () => {
       document.querySelector('.nav-links').classList.toggle('open');
     });
 
-    // Close menu on link click
     document.querySelectorAll('.nav-links a').forEach(link => {
       link.addEventListener('click', () => {
         document.querySelector('.nav-links').classList.remove('open');
       });
     });
 
-    // Smooth reveal on scroll
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
     }, { threshold: 0.1 });
