@@ -27,22 +27,31 @@ lorawatch/
 
 ## Quick Start
 
-### 1. Flash the ESP32 Firmware
+### 1. Configure WiFi in Receiver Firmware
+Before flashing, open `esp32_receiver/esp32_receiver.ino` and update these lines to match your network:
+```cpp
+const char* WIFI_SSID     = "your_wifi_name";
+const char* WIFI_PASSWORD = "your_wifi_password";
+const char* SERVER_URL    = "http://YOUR_PC_IP:5000/api/data";  // e.g. http://192.168.1.100:5000/api/data
+```
+> ⚠️ The receiver and your PC running the server must be on the same WiFi network.
+
+### 2. Flash the ESP32 Firmware
 - Open `esp32_transmitter/esp32_transmitter.ino` in Arduino IDE and flash to the transmitter ESP32-S3
 - Open `esp32_receiver/esp32_receiver.ino` in Arduino IDE and flash to the receiver ESP32-S3
 
-### 2. Install Python Dependencies
+### 3. Install Python Dependencies
 ```bash
 pip install flask flask-socketio eventlet scikit-learn numpy
 ```
 
-### 3. Run the Server
+### 4. Run the Server
 ```bash
 cd server
 python app.py
 ```
 
-### 4. Open the Dashboard
+### 5. Open the Dashboard
 Navigate to `http://localhost:5000` in your browser.  
 Default credentials: `admin` / `admin123`
 
