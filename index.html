@@ -347,11 +347,20 @@
             <code>pip install flask flask-socketio eventlet scikit-learn</code>
           </div>
           <div class="code-block">
-            <p class="code-comment"># 3. Run the server</p>
+            <p class="code-comment"># 3. Configure WiFi in receiver firmware</p>
+            <code>
+              Open esp32_receiver/esp32_receiver.ino<br/>
+              Set WIFI_SSID to your network name<br/>
+              Set WIFI_PASSWORD to your network password<br/>
+              Set SERVER_URL to your PC's local IP (e.g. http://192.168.x.x:5000/api/data)
+            </code>
+          </div>
+          <div class="code-block">
+            <p class="code-comment"># 4. Run the server</p>
             <code>cd lorawatch/server<br/>python app.py</code>
           </div>
           <div class="code-block">
-            <p class="code-comment"># 4. Open the dashboard</p>
+            <p class="code-comment"># 5. Open the dashboard</p>
             <code>http://localhost:5000</code>
           </div>
           <div class="requirements">
